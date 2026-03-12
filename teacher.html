@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduCore – Teacher Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#07101f;--surface:#0d1b2e;--card:#111f35;--card2:#162540;
+    --border:#1c2e47;--bh:#263d5c;
+    --primary:#3b82f6;--pglow:rgba(59,130,246,0.25);--accent:#06b6d4;
+    --success:#10b981;--warning:#f59e0b;--error:#ef4444;--purple:#8b5cf6;
+    --t1:#eef4ff;--t2:#8fa8c8;--t3:#3d5a7a;
+    --font-head:'Outfit',sans-serif;--font-body:'Plus Jakarta Sans',sans-serif;
+  }
+  html,body{height:100%;font-family:var(--font-body);background:var(--bg);color:var(--t1);overflow:hidden}
+  .app{display:flex;height:100vh}
+  /* Sidebar */
+  .sidebar{width:240px;min-width:240px;height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:100}
+  .sidebar-header{display:flex;align-items:center;gap:12px;padding:20px 16px;border-bottom:1px solid var(--border)}
+  .logo-mark{width:36px;height:36px;min-width:36px;background:linear-gradient(135deg,#10b981,#06b6d4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;box-shadow:0 0 20px rgba(16,185,129,0.3)}
+  .logo-name{font-family:var(--font-head);font-size:17px;font-weight:700}
+  .logo-name sub{font-size:10px;color:var(--t3);font-weight:400;display:block}
+  .sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px}
+  .nav-label-sec{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t3);padding:12px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;margin-bottom:2px;color:var(--t2);cursor:pointer;transition:all 0.2s;font-size:14px;font-weight:500;background:none;border:none;width:100%;text-align:left;font-family:var(--font-body);position:relative}
+  .nav-item:hover{color:var(--t1);background:rgba(16,185,129,0.08)}
+  .nav-item.active{color:#10b981;background:rgba(16,185,129,0.12)}
+  .nav-item.active::before{content:'';position:absolute;left:0;top:20%;height:60%;width:3px;background:#10b981;border-radius:0 3px 3px 0}
+  .nav-icon{font-size:16px;min-width:20px;text-align:center}
+  .sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+  .user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:var(--card)}
+  .user-avatar{width:34px;height:34px;min-width:34px;border-radius:50%;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+  .user-name{font-size:13px;font-weight:600;color:var(--t1)}
+  .user-role{font-size:11px;color:var(--t3)}
+  /* Main */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+  .page-title{font-family:var(--font-head);font-size:20px;font-weight:700}
+  .breadcrumb{font-size:13px;color:var(--t3)}
+  .topbar-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--t2);font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px;font-family:var(--font-body)}
+  .topbar-btn:hover{color:var(--t1);border-color:var(--bh)}
+  .content-area{flex:1;overflow-y:auto;padding:24px}
+  .content-area::-webkit-scrollbar{width:6px}
+  .content-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .card-title{font-family:var(--font-head);font-size:16px;font-weight:700}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  /* Metric */
+  .metric-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;transition:all 0.2s}
+  .metric-card:hover{border-color:var(--bh);transform:translateY(-2px)}
+  .metric-header{display:flex;align-items:center;justify-content:space-between}
+  .metric-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .metric-icon.green{background:rgba(16,185,129,0.12);color:var(--success)}
+  .metric-icon.blue{background:rgba(59,130,246,0.12);color:var(--primary)}
+  .metric-icon.yellow{background:rgba(245,158,11,0.12);color:var(--warning)}
+  .metric-value{font-family:var(--font-head);font-size:30px;font-weight:800}
+  .metric-label{font-size:13px;color:var(--t2)}
+  /* Table */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--t3);padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:14px 16px;font-size:14px;border-bottom:1px solid rgba(28,46,71,0.5)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(16,185,129,0.02)}
+  /* Badge */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(16,185,129,0.12);color:var(--success)}
+  .badge.red{background:rgba(239,68,68,0.12);color:var(--error)}
+  .badge.yellow{background:rgba(245,158,11,0.12);color:var(--warning)}
+  .badge.blue{background:rgba(59,130,246,0.12);color:var(--primary)}
+  .badge.gray{background:rgba(100,116,139,0.15);color:#94a3b8}
+  /* Btn */
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:var(--font-body);border:none}
+  .btn-primary{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 2px 12px rgba(16,185,129,0.25)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(16,185,129,0.35)}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--t2)}
+  .btn-outline:hover{border-color:var(--bh);color:var(--t1)}
+  .btn-sm{padding:6px 12px;font-size:12px}
+  .btn-icon{padding:8px;width:34px;height:34px;justify-content:center}
+  /* Form */
+  .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+  .form-label{font-size:13px;font-weight:500;color:var(--t2)}
+  .form-input,.form-select,.form-textarea{padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--t1);font-family:var(--font-body);font-size:14px;transition:all 0.2s;outline:none}
+  .form-input:focus,.form-select:focus{border-color:var(--success);box-shadow:0 0 0 3px rgba(16,185,129,0.15)}
+  .form-input::placeholder{color:var(--t3)}
+  .form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%233d5a7a' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:36px}
+  .form-select option{background:var(--surface)}
+  /* Attendance */
+  .att-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(28,46,71,0.5);transition:background 0.2s}
+  .att-row:hover{background:rgba(16,185,129,0.03)}
+  .att-row:last-child{border-bottom:none}
+  .att-radio-group{display:flex;gap:8px}
+  .att-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:var(--font-body)}
+  .att-btn.present.selected{background:rgba(16,185,129,0.15);border-color:var(--success);color:var(--success)}
+  .att-btn.absent.selected{background:rgba(239,68,68,0.15);border-color:var(--error);color:var(--error)}
+  .att-btn.late.selected{background:rgba(245,158,11,0.15);border-color:var(--warning);color:var(--warning)}
+  /* Timetable */
+  .tt-grid{display:grid;grid-template-columns:80px repeat(5,1fr);gap:2px;background:var(--border);border-radius:10px;overflow:hidden}
+  .tt-cell{background:var(--card);padding:10px 8px;font-size:12px;text-align:center;min-height:60px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+  .tt-header{background:var(--surface);font-weight:600;font-size:13px;color:var(--t2)}
+  .tt-subject{font-weight:600;color:var(--t1)}
+  .tt-time{font-size:11px;color:var(--t3)}
+  /* Notice */
+  .notice-item{padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--card2);margin-bottom:10px}
+  .notice-meta{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .notice-title{font-size:15px;font-weight:600;margin-bottom:4px}
+  .notice-body{font-size:13px;color:var(--t2);line-height:1.6}
+  /* Marks */
+  .marks-input{width:70px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--t1);font-family:var(--font-body);font-size:13px;text-align:center;outline:none}
+  .marks-input:focus{border-color:var(--success)}
+  /* Section */
+  .section-page{display:none}
+  .section-page.active{display:block;animation:fadeUp 0.3s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  /* Toast */
+  .toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+  .toast{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;min-width:260px;animation:toastIn 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+  .toast-success{background:var(--success);color:#fff}
+  .toast-error{background:var(--error);color:#fff}
+  @keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .empty-state{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:var(--t3);text-align:center}
+  .empty-state i{font-size:48px;opacity:0.3}
+  .empty-state p{font-size:14px}
+  .spin{animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:768px){.sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform 0.3s}.sidebar.open{transform:translateX(0)}.grid-2,.grid-3{grid-template-columns:1fr}.content-area{padding:16px}}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-mark"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div class="logo-name">EduCore<sub>Teacher Panel</sub></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label-sec">Overview</div>
+      <button class="nav-item active" onclick="showSection('dashboard')" data-s="dashboard"><span class="nav-icon"><i class="fas fa-chart-pie"></i></span> Dashboard</button>
+      <div class="nav-label-sec">Academic</div>
+      <button class="nav-item" onclick="showSection('attendance')" data-s="attendance"><span class="nav-icon"><i class="fas fa-clipboard-check"></i></span> Mark Attendance</button>
+      <button class="nav-item" onclick="showSection('marks')" data-s="marks"><span class="nav-icon"><i class="fas fa-star-half-alt"></i></span> Enter Marks</button>
+      <button class="nav-item" onclick="showSection('timetable')" data-s="timetable"><span class="nav-icon"><i class="fas fa-calendar-alt"></i></span> My Timetable</button>
+      <div class="nav-label-sec">Communication</div>
+      <button class="nav-item" onclick="showSection('notices')" data-s="notices"><span class="nav-icon"><i class="fas fa-bullhorn"></i></span> Notices</button>
+      <button class="nav-item" onclick="showSection('students')" data-s="students"><span class="nav-icon"><i class="fas fa-user-graduate"></i></span> My Students</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="userAvatar">T</div>
+        <div><div class="user-name" id="userName">Teacher</div><div class="user-role">Teacher</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:16px">
+        <button class="topbar-btn btn-icon" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none" id="menuBtn"><i class="fas fa-bars"></i></button>
+        <div><div class="page-title" id="pageTitle">Dashboard</div><div class="breadcrumb" id="breadcrumb">EduCore / Teacher / Dashboard</div></div>
+      </div>
+      <button class="topbar-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </header>
+
+    <div class="content-area">
+
+      <!-- DASHBOARD -->
+      <div class="section-page active" id="section-dashboard">
+        <div class="grid-3" style="margin-bottom:20px">
+          <div class="metric-card"><div class="metric-header"><div class="metric-icon green"><i class="fas fa-user-graduate"></i></div></div><div class="metric-value" id="m-students">0</div><div class="metric-label">My Students</div></div>
+          <div class="metric-card"><div class="metric-header"><div class="metric-icon blue"><i class="fas fa-school"></i></div></div><div class="metric-value" id="m-class">—</div><div class="metric-label">My Class</div></div>
+          <div class="metric-card"><div class="metric-header"><div class="metric-icon yellow"><i class="fas fa-book"></i></div></div><div class="metric-value" id="m-subjects">0</div><div class="metric-label">Subjects</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Today's Notices</div></div>
+          <div id="dashNotices"><div class="empty-state"><i class="fas fa-circle-notch spin"></i></div></div>
+        </div>
+      </div>
+
+      <!-- ATTENDANCE -->
+      <div class="section-page" id="section-attendance">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Mark Attendance</div></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="form-group" style="margin:0"><label class="form-label">Date</label><input type="date" class="form-input" id="attDate"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Class</label><select class="form-select" id="attClass" onchange="loadAttStudents()"><option value="">Select Class</option></select></div>
+          </div>
+        </div>
+        <div class="card">
+          <div id="attendanceList"><div class="empty-state"><i class="fas fa-clipboard-check"></i><p>Select date and class</p></div></div>
+          <div style="padding-top:12px;display:flex;justify-content:flex-end" id="attSaveBtn" style="display:none">
+            <button class="btn btn-primary" onclick="saveAttendance()"><i class="fas fa-save"></i> Save Attendance</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MARKS -->
+      <div class="section-page" id="section-marks">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Enter Marks</div></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="form-group" style="margin:0"><label class="form-label">Class</label><select class="form-select" id="marksClass" onchange="loadMarksStudents()"><option value="">Select Class</option></select></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Subject</label><input type="text" class="form-input" id="marksSubject" placeholder="e.g. Mathematics"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Exam Type</label><select class="form-select" id="marksExam"><option>Unit Test</option><option>Midterm</option><option>Final</option><option>Assignment</option></select></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Max Marks</label><input type="number" class="form-input" id="marksMax" value="100" style="width:100px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div id="marksList"><div class="empty-state"><i class="fas fa-star-half-alt"></i><p>Select class to enter marks</p></div></div>
+          <div style="padding-top:12px;display:flex;justify-content:flex-end" id="marksSaveBtn" style="display:none">
+            <button class="btn btn-primary" onclick="saveMarks()"><i class="fas fa-save"></i> Save Marks</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMETABLE -->
+      <div class="section-page" id="section-timetable">
+        <div class="card">
+          <div class="card-header"><div class="card-title">My Timetable</div><select class="form-select" id="ttClassSelect" style="width:160px" onchange="loadTeacherTimetable()"><option value="">Select Class</option></select></div>
+          <div id="ttContent"><div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Select a class to view timetable</p></div></div>
+        </div>
+      </div>
+
+      <!-- NOTICES -->
+      <div class="section-page" id="section-notices">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Notice Board</div></div>
+          <div id="noticesList"><div class="empty-state"><i class="fas fa-circle-notch spin"></i></div></div>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="section-page" id="section-students">
+        <div class="card">
+          <div class="card-header"><div class="card-title">My Students</div>
+          <select class="form-select" id="studClassFilter" style="width:160px" onchange="loadMyStudents()"><option value="">All My Classes</option></select></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Student</th><th>Roll No.</th><th>Class</th><th>Attendance</th><th>Fee Status</th></tr></thead>
+              <tbody id="studentsTableBody"><tr><td colspan="5"><div class="empty-state"><i class="fas fa-circle-notch spin"></i></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyCk5kqpZRV6ndUE_5_szihDc1XCIV5cNSk",authDomain:"school-management-b148c.firebaseapp.com",databaseURL:"https://school-management-b148c-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"school-management-b148c",storageBucket:"school-management-b148c.firebasestorage.app",messagingSenderId:"144345810749",appId:"1:144345810749:web:6a6578d309380218e9a754"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),db=firebase.database();
+
+let currentUser=null,teacherData=null,myStudents=[],myClasses=[],allTimetable=[],allNotices=[];
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const objectToArray=obj=>!obj?[]:Object.entries(obj).map(([id,v])=>({id,...v}));
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){window.location.href='index.html';return}
+  const snap=await db.ref(`users/${user.uid}`).get();
+  if(!snap.exists()||snap.val().role!=='teacher'){window.location.href='index.html';return}
+  currentUser=user;
+  document.getElementById('userName').textContent=user.displayName||user.email?.split('@')[0]||'Teacher';
+  document.getElementById('userAvatar').textContent=(user.displayName||user.email||'T')[0].toUpperCase();
+  loadTeacherData();
+});
+
+function logout(){auth.signOut().then(()=>window.location.href='index.html')}
+
+async function loadTeacherData(){
+  // Find teacher record by email
+  const tSnap=await db.ref('teachers').orderByChild('email').equalTo(currentUser.email).get();
+  if(tSnap.exists()){
+    const entries=Object.entries(tSnap.val());
+    teacherData={id:entries[0][0],...entries[0][1]};
+  }
+
+  const classSnap=await db.ref('classes').get();
+  const allClasses=objectToArray(classSnap.val());
+  myClasses=teacherData?allClasses.filter(c=>c.id===teacherData.classId||c.classTeacherId===teacherData?.id):allClasses;
+  if(!myClasses.length)myClasses=allClasses;
+
+  // Populate class selects
+  ['attClass','marksClass','ttClassSelect','studClassFilter'].forEach(sid=>{
+    const el=document.getElementById(sid);
+    if(!el)return;
+    el.innerHTML=`<option value="">Select Class</option>`;
+    myClasses.forEach(c=>el.innerHTML+=`<option value="${c.id}">${c.name}</option>`);
+  });
+
+  // Load students
+  const sSnap=await db.ref('students').get();
+  myStudents=objectToArray(sSnap.val()).filter(s=>myClasses.some(c=>c.id===s.classId));
+
+  // Timetable
+  const ttSnap=await db.ref('timetable').get();
+  allTimetable=objectToArray(ttSnap.val());
+
+  // Notices
+  db.ref('notices').on('value',s=>{allNotices=objectToArray(s.val()).sort((a,b)=>b.createdAt-a.createdAt);renderNotices();renderDashNotices();});
+
+  updateDashboard();
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('attDate').value=today;
+  loadMyStudents();
+}
+
+function updateDashboard(){
+  document.getElementById('m-students').textContent=myStudents.length;
+  const cls=myClasses[0];
+  document.getElementById('m-class').textContent=cls?cls.name:'—';
+  const subjects=(teacherData?.subjects||'').split(',').filter(Boolean).length;
+  document.getElementById('m-subjects').textContent=subjects||myClasses.length;
+}
+
+function renderDashNotices(){
+  const el=document.getElementById('dashNotices');
+  const relevant=allNotices.filter(n=>n.target==='all'||n.target==='teachers').slice(0,5);
+  if(!relevant.length){el.innerHTML='<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No notices</p></div>';return}
+  el.innerHTML=relevant.map(n=>`<div class="notice-item"><div class="notice-meta"><span class="badge ${n.priority==='urgent'?'red':n.priority==='important'?'yellow':'blue'}">${n.priority||'normal'}</span><span style="font-size:12px;color:var(--t3)">${new Date(n.createdAt).toLocaleDateString('en-IN')}</span></div><div class="notice-title">${esc(n.title)}</div><div class="notice-body">${esc(n.content||'').slice(0,120)}...</div></div>`).join('');
+}
+
+function renderNotices(){
+  const el=document.getElementById('noticesList');
+  const relevant=allNotices.filter(n=>n.target==='all'||n.target==='teachers');
+  if(!relevant.length){el.innerHTML='<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No notices</p></div>';return}
+  el.innerHTML=relevant.map(n=>`<div class="notice-item"><div class="notice-meta"><span class="badge ${n.priority==='urgent'?'red':n.priority==='important'?'yellow':'blue'}">${n.priority||'normal'}</span><span style="font-size:12px;color:var(--t3)">${new Date(n.createdAt).toLocaleString('en-IN')}</span></div><div class="notice-title">${esc(n.title)}</div><div class="notice-body">${esc(n.content||'')}</div></div>`).join('');
+}
+
+// Attendance
+function loadAttStudents(){
+  const classId=document.getElementById('attClass').value;
+  const el=document.getElementById('attendanceList');
+  document.getElementById('attSaveBtn').style.display='flex';
+  if(!classId){el.innerHTML='<div class="empty-state"><i class="fas fa-clipboard-check"></i><p>Select a class</p></div>';return}
+  const cls=myStudents.filter(s=>s.classId===classId);
+  if(!cls.length){el.innerHTML='<div class="empty-state"><p>No students in this class</p></div>';return}
+  el.innerHTML=cls.map(s=>`
+    <div class="att-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#ec4899);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">${(s.name||'S')[0].toUpperCase()}</div>
+        <div><div style="font-weight:600;font-size:14px">${esc(s.name)}</div><div style="font-size:12px;color:var(--t3)">${esc(s.rollNo||'')}</div></div>
+      </div>
+      <div class="att-radio-group" data-student="${s.id}">
+        <button class="att-btn present" onclick="selectAtt(this,'present')">Present</button>
+        <button class="att-btn absent" onclick="selectAtt(this,'absent')">Absent</button>
+        <button class="att-btn late" onclick="selectAtt(this,'late')">Late</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectAtt(btn,status){
+  const group=btn.parentElement;
+  group.querySelectorAll('.att-btn').forEach(b=>{b.className=b.className.replace(' selected','')});
+  btn.classList.add('selected');
+}
+
+async function saveAttendance(){
+  const classId=document.getElementById('attClass').value;
+  const date=document.getElementById('attDate').value;
+  if(!classId||!date){toast('Select class and date','error');return}
+  const rows=document.querySelectorAll('.att-radio-group');
+  const records=[];
+  rows.forEach(row=>{
+    const studentId=row.dataset.student;
+    const selected=row.querySelector('.att-btn.selected');
+    if(selected&&studentId) records.push({studentId,classId,date,status:selected.classList[1]||'present',updatedAt:Date.now()});
+  });
+  if(!records.length){toast('Mark attendance first','error');return}
+  try{
+    const batch={};
+    records.forEach(r=>{const key=db.ref('attendance').push().key;batch[key]={...r,createdAt:Date.now()};});
+    await db.ref('attendance').update(batch);
+    toast(`Attendance saved for ${records.length} students`);
+  }catch(e){toast(e.message,'error')}
+}
+
+// Marks
+function loadMarksStudents(){
+  const classId=document.getElementById('marksClass').value;
+  const el=document.getElementById('marksList');
+  document.getElementById('marksSaveBtn').style.display='flex';
+  if(!classId){el.innerHTML='<div class="empty-state"><i class="fas fa-star-half-alt"></i><p>Select class</p></div>';return}
+  const cls=myStudents.filter(s=>s.classId===classId);
+  if(!cls.length){el.innerHTML='<div class="empty-state"><p>No students</p></div>';return}
+  el.innerHTML=`<table>
+    <thead><tr><th>Student</th><th>Roll No.</th><th>Marks Obtained</th><th>Grade</th></tr></thead>
+    <tbody>${cls.map(s=>`<tr>
+      <td style="font-weight:600">${esc(s.name)}</td>
+      <td><span class="badge blue">${esc(s.rollNo||'—')}</span></td>
+      <td><input type="number" class="marks-input" data-student="${s.id}" placeholder="0" min="0" oninput="calcGrade(this)"></td>
+      <td><span class="badge gray" id="grade-${s.id}">—</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function calcGrade(input){
+  const max=+document.getElementById('marksMax').value||100;
+  const val=+input.value;
+  const pct=(val/max)*100;
+  const g=document.getElementById(`grade-${input.dataset.student}`);
+  if(!g)return;
+  const [grade,cls]=pct>=90?['A+','green']:pct>=80?['A','green']:pct>=70?['B','blue']:pct>=60?['C','yellow']:pct>=50?['D','yellow']:['F','red'];
+  g.className=`badge ${cls}`;g.textContent=grade;
+}
+
+async function saveMarks(){
+  const classId=document.getElementById('marksClass').value;
+  const subject=document.getElementById('marksSubject').value.trim();
+  const examType=document.getElementById('marksExam').value;
+  const maxMarks=document.getElementById('marksMax').value;
+  if(!classId||!subject){toast('Select class and enter subject','error');return}
+  const inputs=document.querySelectorAll('.marks-input');
+  const batch={};
+  inputs.forEach(inp=>{
+    if(!inp.value)return;
+    const key=db.ref('marks').push().key;
+    batch[key]={studentId:inp.dataset.student,classId,subject,examType,marks:+inp.value,maxMarks:+maxMarks,date:new Date().toISOString().split('T')[0],teacherId:teacherData?.id||'',createdAt:Date.now()};
+  });
+  if(!Object.keys(batch).length){toast('Enter marks first','error');return}
+  try{await db.ref('marks').update(batch);toast(`Marks saved for ${Object.keys(batch).length} students`);}
+  catch(e){toast(e.message,'error')}
+}
+
+// Timetable
+function loadTeacherTimetable(){
+  const classId=document.getElementById('ttClassSelect').value;
+  const el=document.getElementById('ttContent');
+  if(!classId){el.innerHTML='<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Select a class</p></div>';return}
+  const slots=allTimetable.filter(s=>s.classId===classId);
+  const days=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const times=[...new Set(slots.map(s=>s.time))].sort();
+  if(!times.length){el.innerHTML='<div class="empty-state"><p>No timetable slots for this class</p></div>';return}
+  let html='<div class="tt-grid">';
+  html+='<div class="tt-cell tt-header">Time</div>';
+  days.forEach(d=>html+=`<div class="tt-cell tt-header">${d}</div>`);
+  times.forEach(time=>{
+    html+=`<div class="tt-cell tt-header"><span class="tt-time">${esc(time)}</span></div>`;
+    days.forEach(day=>{
+      const slot=slots.find(s=>s.day===day&&s.time===time);
+      html+=slot?`<div class="tt-cell"><span class="tt-subject">${esc(slot.subject)}</span></div>`:'<div class="tt-cell" style="color:var(--t3);font-size:11px">—</div>';
+    });
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+// Students
+function loadMyStudents(){
+  const classId=document.getElementById('studClassFilter').value;
+  const data=classId?myStudents.filter(s=>s.classId===classId):myStudents;
+  const tbody=document.getElementById('studentsTableBody');
+  if(!data.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="fas fa-user-graduate"></i><p>No students</p></div></td></tr>';return}
+  tbody.innerHTML=data.map(s=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#ec4899);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">${(s.name||'S')[0].toUpperCase()}</div>
+      <div style="font-weight:600">${esc(s.name)}</div>
+    </div></td>
+    <td><span class="badge blue">${esc(s.rollNo||'—')}</span></td>
+    <td>${myClasses.find(c=>c.id===s.classId)?.name||'—'}</td>
+    <td><span class="badge gray">—</span></td>
+    <td><span class="badge ${s.feeStatus==='paid'?'green':s.feeStatus==='partial'?'yellow':'red'}">${s.feeStatus||'pending'}</span></td>
+  </tr>`).join('');
+}
+
+function showSection(name){
+  document.querySelectorAll('.section-page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`section-${name}`)?.classList.add('active');
+  document.querySelector(`[data-s="${name}"]`)?.classList.add('active');
+  const titles={dashboard:'Dashboard',attendance:'Mark Attendance',marks:'Enter Marks',timetable:'My Timetable',notices:'Notice Board',students:'My Students'};
+  document.getElementById('pageTitle').textContent=titles[name]||name;
+  document.getElementById('breadcrumb').textContent=`EduCore / Teacher / ${titles[name]||name}`;
+}
+
+function toast(msg,type='success'){
+  const tc=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'circle-xmark'}"></i> ${msg}`;
+  tc.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+if(window.innerWidth<=768)document.getElementById('menuBtn').style.display='flex';
+window.addEventListener('resize',()=>{document.getElementById('menuBtn').style.display=window.innerWidth<=768?'flex':'none'});
+</script>
+</body>
+</html>
