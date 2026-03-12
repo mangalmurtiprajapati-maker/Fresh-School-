@@ -235,16 +235,31 @@ auth.onAuthStateChanged(async user=>{
 function logout(){auth.signOut().then(()=>window.location.href='index.html')}
 
 async function loadStudentData(user){
-  // Find student record by email
-  const sSnap=await db.ref('students').orderByChild('email').equalTo(user.email).get();
-  if(!sSnap.exists()){
-    // Try to find by uid mapping
-    const userSnap=await db.ref(`users/${user.uid}`).get();
-    const uid=userSnap.val();
-    if(uid.studentId){const s2=await db.ref(`students/${uid.studentId}`).get();if(s2.exists())studentData={id:uid.studentId,...s2.val()};}
-  }else{
-    const entries=Object.entries(sSnap.val());
-    studentData={id:entries[0][0],...entries[0][1]};
+  // Method 1: Check users/{uid}.studentId (set by admin when creating account)
+  const userSnap = await db.ref(`users/${user.uid}`).get();
+  const userRecord = userSnap.val() || {};
+
+  if (userRecord.studentId) {
+    const s2 = await db.ref(`students/${userRecord.studentId}`).get();
+    if (s2.exists()) studentData = { id: userRecord.studentId, ...s2.val() };
+  }
+
+  // Method 2: Fallback — find by uid field in students node
+  if (!studentData) {
+    const byUid = await db.ref('students').orderByChild('uid').equalTo(user.uid).get();
+    if (byUid.exists()) {
+      const entries = Object.entries(byUid.val());
+      studentData = { id: entries[0][0], ...entries[0][1] };
+    }
+  }
+
+  // Method 3: Fallback — find by email
+  if (!studentData) {
+    const byEmail = await db.ref('students').orderByChild('email').equalTo(user.email).get();
+    if (byEmail.exists()) {
+      const entries = Object.entries(byEmail.val());
+      studentData = { id: entries[0][0], ...entries[0][1] };
+    }
   }
 
   if(!studentData){

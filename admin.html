@@ -797,29 +797,36 @@
           </div>
 
           <div class="card">
-            <div class="card-header"><div class="card-title"><i class="fas fa-users-cog" style="color:var(--accent);margin-right:8px"></i>User Management</div></div>
+            <div class="card-header"><div class="card-title"><i class="fas fa-users-cog" style="color:var(--accent);margin-right:8px"></i>User Account बनाएं</div></div>
             <div class="form-grid" style="grid-template-columns:1fr">
-              <p style="font-size:13px;color:var(--t2);line-height:1.6">
-                To add teachers and students with login access, first create their Firebase Auth accounts via the Firebase Console, 
-                then assign roles using the forms in the Teachers/Students sections. 
-                Alternatively, use the admin panel to create credential-based accounts.
+              <p style="font-size:13px;color:var(--t2);line-height:1.7;padding:10px;background:rgba(59,130,246,0.05);border-radius:8px;border:1px solid rgba(59,130,246,0.1)">
+                <i class="fas fa-info-circle" style="color:var(--primary)"></i>
+                Teacher/Student का account बनाने के लिए पहले उन्हें <strong>Teachers/Students section</strong> में add करें, 
+                फिर उनका <strong>ID</strong> copy करके यहाँ paste करें। इससे login account उनके record से link होगा।
               </p>
               <div class="form-group">
-                <label class="form-label">New User Email</label>
-                <input type="email" class="form-input" id="newUserEmail" placeholder="user@school.edu">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-input" id="newUserEmail" placeholder="teacher@school.edu">
               </div>
               <div class="form-group">
-                <label class="form-label">Temp Password</label>
-                <input type="password" class="form-input" id="newUserPass" placeholder="Temporary password">
+                <label class="form-label">Password * (min 6 characters)</label>
+                <input type="password" class="form-input" id="newUserPass" placeholder="Minimum 6 characters">
               </div>
               <div class="form-group">
-                <label class="form-label">Role</label>
-                <select class="form-select" id="newUserRole">
+                <label class="form-label">Role *</label>
+                <select class="form-select" id="newUserRole" onchange="updateLinkedIdLabel()">
                   <option value="teacher">Teacher</option>
                   <option value="student">Student</option>
                 </select>
               </div>
-              <button class="btn btn-primary" onclick="createUser()"><i class="fas fa-user-plus"></i> Create Account</button>
+              <div class="form-group">
+                <label class="form-label" id="linkedIdLabel">Teacher Record ID (Teachers section से copy करें)</label>
+                <input type="text" class="form-input" id="newUserLinkedId" placeholder="-NxTeacherKey123 (Firebase DB key)">
+                <small style="color:var(--t3);font-size:11px;margin-top:4px;display:block">
+                  💡 Teachers/Students section में record के सामने ID दिखेगी, या Firebase Console → Realtime Database से copy करें
+                </small>
+              </div>
+              <button class="btn btn-primary" onclick="createUser()"><i class="fas fa-user-plus"></i> Account बनाएं</button>
             </div>
           </div>
         </div>
@@ -1414,7 +1421,10 @@ function renderTeachers(list=null) {
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:10px">
         <div class="avatar-sm" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)">${initials}</div>
-        <div><div style="font-weight:600">${escHtml(t.name||'')}</div><div style="font-size:12px;color:var(--t3)">${escHtml(t.phone||'')}</div></div>
+        <div><div style="font-weight:600">${escHtml(t.name||'')}</div>
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;cursor:pointer" onclick="navigator.clipboard.writeText('${t.id}');toast('ID copied!')" title="Click to copy ID">
+          🔑 ${t.id} <i class="fas fa-copy" style="font-size:10px"></i>
+        </div></div>
       </div></td>
       <td>${escHtml(t.email||'')}</td>
       <td>${(t.subjects||'').split(',').map(s=>`<span class="badge blue" style="margin:1px">${s.trim()}</span>`).join(' ')}</td>
@@ -1486,7 +1496,10 @@ function renderStudents(list=null) {
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:10px">
         <div class="avatar-sm" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)">${initials}</div>
-        <div><div style="font-weight:600">${escHtml(s.name||'')}</div><div style="font-size:12px;color:var(--t3)">${escHtml(s.email||'')}</div></div>
+        <div><div style="font-weight:600">${escHtml(s.name||'')}</div>
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;cursor:pointer" onclick="navigator.clipboard.writeText('${s.id}');toast('ID copied!')" title="Click to copy ID">
+          🔑 ${s.id} <i class="fas fa-copy" style="font-size:10px"></i>
+        </div></div>
       </div></td>
       <td><span class="badge blue">${escHtml(s.rollNo||'—')}</span></td>
       <td>${cls?cls.name:'<span class="badge gray">Unassigned</span>'}</td>
@@ -1888,22 +1901,55 @@ async function saveSettings() {
 }
 
 async function createUser() {
-  const email = document.getElementById('newUserEmail').value.trim();
-  const pass  = document.getElementById('newUserPass').value;
-  const role  = document.getElementById('newUserRole').value;
-  if (!email||!pass) { toast('Email and password required','error'); return; }
-  // Note: Creating users from client requires secondary app or Admin SDK
-  // This uses a workaround with secondary auth instance
+  const email    = document.getElementById('newUserEmail').value.trim();
+  const pass     = document.getElementById('newUserPass').value;
+  const role     = document.getElementById('newUserRole').value;
+  const linkedId = document.getElementById('newUserLinkedId').value.trim();
+
+  if (!email || !pass) { toast('Email और password required है', 'error'); return; }
+  if (pass.length < 6)  { toast('Password कम से कम 6 characters का होना चाहिए', 'error'); return; }
+
   try {
-    const secondApp = firebase.initializeApp(firebase.app().options, 'secondary');
+    // Create secondary app instance to avoid logging out current admin
+    let secondApp;
+    try { secondApp = firebase.app('secondary'); } catch(e) { secondApp = firebase.initializeApp(firebase.app().options, 'secondary'); }
     const secondAuth = secondApp.auth();
+
     const cred = await secondAuth.createUserWithEmailAndPassword(email, pass);
-    await db.ref(`users/${cred.user.uid}`).set({ role, email, createdAt:Date.now() });
+    const uid  = cred.user.uid;
+
+    // Save user record with role + optional link to teacher/student record
+    const userData = {
+      role,
+      email,
+      createdAt: Date.now()
+    };
+
+    if (role === 'teacher' && linkedId) userData.teacherId = linkedId;
+    if (role === 'student' && linkedId) userData.studentId = linkedId;
+
+    await db.ref(`users/${uid}`).set(userData);
+
+    // Also update the teacher/student record with this UID for easy lookup
+    if (role === 'teacher' && linkedId) {
+      await db.ref(`teachers/${linkedId}`).update({ uid, email });
+    }
+    if (role === 'student' && linkedId) {
+      await db.ref(`students/${linkedId}`).update({ uid, email });
+    }
+
     await secondAuth.signOut();
-    secondApp.delete();
-    toast(`${role.charAt(0).toUpperCase()+role.slice(1)} account created`);
-    clearForm('newUserEmail','newUserPass');
-  } catch(e) { toast(e.message,'error'); }
+
+    toast(`✅ ${role.charAt(0).toUpperCase()+role.slice(1)} account बन गया! Email: ${email}`);
+    clearForm('newUserEmail', 'newUserPass', 'newUserLinkedId');
+  } catch(e) {
+    const msgs = {
+      'auth/email-already-in-use': 'यह email पहले से registered है।',
+      'auth/weak-password':        'Password बहुत weak है।',
+      'auth/invalid-email':        'Invalid email address।'
+    };
+    toast(msgs[e.code] || e.message, 'error');
+  }
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────
@@ -1919,6 +1965,19 @@ function confirmDelete(path, id, label) {
     } catch(e) { toast(e.message,'error'); }
   };
   openModal('confirmModal');
+}
+
+function updateLinkedIdLabel() {
+  const role = document.getElementById('newUserRole').value;
+  const label = document.getElementById('linkedIdLabel');
+  const input = document.getElementById('newUserLinkedId');
+  if (role === 'teacher') {
+    label.textContent = 'Teacher Record ID (Teachers section से copy करें)';
+    input.placeholder = '-NxTeacherKey123';
+  } else {
+    label.textContent = 'Student Record ID (Students section से copy करें)';
+    input.placeholder = '-NxStudentKey456';
+  }
 }
 
 // ─── Utility ──────────────────────────────────────────────────────────────
